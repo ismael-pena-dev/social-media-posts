@@ -95,6 +95,10 @@ dependencies {
     implementation(libs.room.ktx)
     implementation(libs.room.paging)
 
+    // Paging
+    implementation(libs.paging.runtime)
+    implementation(libs.paging.compose)
+
     // Debug only
     debugImplementation(libs.ui.tooling)
     debugImplementation(libs.ui.test.manifest)

@@ -27,6 +27,10 @@
     # Coil
     coil = "2.4.0"
 
+    # Paging
+    paging-runtime = "3.2.1"
+    paging-compose = "3.3.0-alpha02"
+
     # Unit testing
     junit = "4.13.2"
     espresso-core = "3.5.1"
@@ -73,6 +77,10 @@
     # Retrofit
     retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
     retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
+
+    # Paging
+    paging-runtime = { group = "androidx.paging", name = "paging-runtime-ktx", version.ref = "paging-runtime" }
+    paging-compose = { group = "androidx.paging", name = "paging-compose", version.ref = "paging-compose" }
 
     # Unit testing
     ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
