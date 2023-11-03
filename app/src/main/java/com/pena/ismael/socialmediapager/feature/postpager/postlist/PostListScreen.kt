@@ -20,8 +20,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -76,11 +78,13 @@ fun PostListScreen(
         }
     }
 
+    val scrollState = rememberLazyListState()
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            state = scrollState,
         ) {
             items(
                 count = posts.itemCount,
@@ -90,6 +94,7 @@ fun PostListScreen(
             ) { index ->
                 val post = posts.get(index)
                 if (post != null) {
+                    Log.d("SCREEN", "Loading id:${post.postId} index:$index")
                     PostListItem(
                         post = post,
                         onClick = viewModel::onPostClick
@@ -99,7 +104,12 @@ fun PostListScreen(
 
             if(posts.loadState.append is LoadState.Loading || posts.loadState.refresh is LoadState.Loading) {
                 item {
-                    CircularProgressIndicator()
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
                 }
             }
         }

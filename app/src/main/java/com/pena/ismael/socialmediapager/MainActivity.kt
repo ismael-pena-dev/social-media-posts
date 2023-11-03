@@ -33,6 +33,7 @@ import dagger.hilt.components.SingletonComponent
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Named
+import javax.inject.Singleton
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -76,6 +77,7 @@ abstract class PostModule {
 
     companion object {
         @Provides
+        @Singleton
         fun providesPostDatabase(
             @ApplicationContext context: Context
         ): PostDatabase {
@@ -87,6 +89,7 @@ abstract class PostModule {
         }
 
         @Provides
+        @Singleton
         @Named("post")
         fun providePostRetrofit(): Retrofit {
             return Retrofit.Builder()
@@ -96,6 +99,7 @@ abstract class PostModule {
         }
 
         @Provides
+        @Singleton
         fun providePostApi(
             @Named("post") retrofit: Retrofit
         ): PostApi {
@@ -104,6 +108,7 @@ abstract class PostModule {
 
         @OptIn(ExperimentalPagingApi::class)
         @Provides
+        @Singleton
         fun providesTextPostPager(
             textPostRemoteMediator: PostRemoteMediator,
             pagingDatabase: PostDatabase,
@@ -111,13 +116,13 @@ abstract class PostModule {
             return Pager(
                 config = PagingConfig(
                     pageSize = 5,
-//                    initialLoadSize = 5,
-                    prefetchDistance = 5,
+                    initialLoadSize = 5,
+                    prefetchDistance = 10,
                     enablePlaceholders = false
                 ),
                 remoteMediator = textPostRemoteMediator,
                 pagingSourceFactory = {
-                    pagingDatabase.postDao().pagingSource()
+                    pagingDatabase.postDao.pagingSource()
                 },
             )
         }

@@ -51,7 +51,7 @@ class PostRepository @Inject constructor(
 )
 abstract class PostDatabase: RoomDatabase() {
     
-    abstract fun postDao(): PostDao
+    abstract val postDao: PostDao
     abstract fun commentDao(): CommentDao
     abstract fun albumDao(): AlbumDao
     abstract fun photoDao(): PhotoDao

@@ -21,7 +21,7 @@ class PostRemoteMediator @Inject constructor(
 ): RemoteMediator<Int, PostEntity>() {
 
     override suspend fun initialize(): InitializeAction {
-        val count = postDatabase.postDao().count()
+        val count = postDatabase.postDao.count()
         Log.d(TAG, "initialize() -> db.count = $count")
         if (count > 0)
             return InitializeAction.SKIP_INITIAL_REFRESH
@@ -36,13 +36,14 @@ class PostRemoteMediator @Inject constructor(
         return try {
             val loadKey  = when(loadType) {
                 LoadType.APPEND -> {
-                    val lastItem = state.lastItemOrNull()
-                    if (lastItem == null) {
-                        // No items were loaded after the initial REFRESH and there's no more items to load
-                        return MediatorResult.Success(endOfPaginationReached = true)
-                    } else {
-                        lastItem.postId + 1
-                    }
+                    val lastItem = state.lastItemOrNull()?.postId ?: 0
+                    lastItem + 1
+//                    if (lastItem == null) {
+//                        // No items were loaded after the initial REFRESH and there's no more items to load
+//                        return MediatorResult.Success(endOfPaginationReached = false)
+//                    } else {
+//                        lastItem.postId + 1
+//                    }
                 }
                 LoadType.REFRESH -> 1 // Start from the beginning
                 LoadType.PREPEND -> return MediatorResult.Success(endOfPaginationReached = true)
@@ -56,7 +57,7 @@ class PostRemoteMediator @Inject constructor(
             val isEndOfPaginationReached = posts.size < state.config.pageSize // Remote call returns empty list when there's no more to fetch
             Log.d(TAG, "loadKey: $loadKey\nposts: ${posts.map { it.id }} -> size:${posts.size}\nisEndOfPaginationReached: $isEndOfPaginationReached")
 
-            Log.d(TAG, "Before transaction: ${postDatabase.postDao().count()}")
+            Log.d(TAG, "Before transaction: ${postDatabase.postDao.count()}")
             // DB
             postDatabase.withTransaction {
 //                if (loadType == LoadType.REFRESH) {
@@ -67,9 +68,9 @@ class PostRemoteMediator @Inject constructor(
                 val postEntities = posts.map {  postDto ->
                     postDto.toPostEntity()
                 }
-                postDatabase.postDao().insertAll(postEntities)
+                postDatabase.postDao.insertAll(postEntities)
             }
-            Log.d(TAG, "After transaction: ${postDatabase.postDao().count()}")
+            Log.d(TAG, "After transaction: ${postDatabase.postDao.count()}")
             state.anchorPosition
 
             MediatorResult.Success(
