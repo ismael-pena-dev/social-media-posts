@@ -1,7 +1,5 @@
 package com.pena.ismael.socialmediapager.feature.postpager.postlist
 
-import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,21 +18,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.pager.VerticalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -48,10 +41,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.LoadState
-import androidx.paging.compose.LazyPagingItems
-import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.pena.ismael.socialmediapager.R
@@ -68,15 +57,15 @@ import com.pena.ismael.socialmediapager.ui.theme.SocialMediaPagerTheme
 fun PostListScreen(
     viewModel: PostListViewModel = hiltViewModel()
 ) {
-    val posts = viewModel.posts.collectAsLazyPagingItems()
+    val posts = viewModel.posts.collectAsStateWithLifecycle(emptyList())
 
-    val context = LocalContext.current
-    LaunchedEffect(key1 = posts.loadState) {
-        val loadState = posts.loadState.refresh
-        if (loadState is LoadState.Error) {
-            Toast.makeText(context, "Error: ${loadState.error.message}", Toast.LENGTH_SHORT).show()
-        }
-    }
+//    val context = LocalContext.current
+//    LaunchedEffect(key1 = posts.loadState) {
+//        val loadState = posts.loadState.refresh
+//        if (loadState is LoadState.Error) {
+//            Toast.makeText(context, "Error: ${loadState.error.message}", Toast.LENGTH_SHORT).show()
+//        }
+//    }
 
     val scrollState = rememberLazyListState()
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -86,32 +75,31 @@ fun PostListScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             state = scrollState,
         ) {
-            items(
-                count = posts.itemCount,
-                key = posts.itemKey { post ->
+            itemsIndexed(
+                items = posts.value,
+                key = { _, post ->
                     post.postId
-                },
-            ) { index ->
-                val post = posts.get(index)
-                if (post != null) {
-                    Log.d("SCREEN", "Loading id:${post.postId} index:$index")
-                    PostListItem(
-                        post = post,
-                        onClick = viewModel::onPostClick
-                    )
+                }
+            ) { index, post ->
+                PostListItem(
+                    post = post,
+                    onClick = viewModel::onPostClick
+                )
+                if (index == posts.value.lastIndex) {
+                    viewModel.fetchNextPosts()
                 }
             }
 
-            if(posts.loadState.append is LoadState.Loading || posts.loadState.refresh is LoadState.Loading) {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-            }
+//            if(posts.loadState.append is LoadState.Loading || posts.loadState.refresh is LoadState.Loading) {
+//                item {
+//                    Row(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        horizontalArrangement = Arrangement.Center
+//                    ) {
+//                        CircularProgressIndicator()
+//                    }
+//                }
+//            }
         }
     }
 }
@@ -179,7 +167,7 @@ fun PostListItem(
     Card(
         modifier = modifier.clickable {
             onClick(post)
-        },
+        }.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         when (post) {
@@ -238,7 +226,7 @@ fun TextPostListItemContent(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         UserIcon(userId = post.userId)
@@ -246,12 +234,14 @@ fun TextPostListItemContent(
             Text(
                 text =  "(${post.postId}) " + post.title.replaceFirstChar { it.uppercaseChar() },
                 style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.fillMaxWidth(),
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = post.body.replaceFirstChar { it.uppercaseChar() },
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Light,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }

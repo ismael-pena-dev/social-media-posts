@@ -13,21 +13,15 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.paging.ExperimentalPagingApi
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
 import androidx.room.Room
 import com.pena.ismael.socialmediapager.feature.postpager.repository.remote.PostApi
 import com.pena.ismael.socialmediapager.feature.postpager.postlist.PostDatabase
 import com.pena.ismael.socialmediapager.feature.postpager.postlist.PostListScreen
-import com.pena.ismael.socialmediapager.feature.postpager.postlist.PostRemoteMediator
-import com.pena.ismael.socialmediapager.feature.postpager.repository.local.entity.PostEntity
 import com.pena.ismael.socialmediapager.ui.theme.SocialMediaPagerTheme
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.AndroidEntryPoint
-import dagger.hilt.android.components.ViewModelComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import retrofit2.Retrofit
@@ -106,26 +100,6 @@ abstract class PostModule {
             return retrofit.create(PostApi::class.java)
         }
 
-        @OptIn(ExperimentalPagingApi::class)
-        @Provides
-        @Singleton
-        fun providesTextPostPager(
-            textPostRemoteMediator: PostRemoteMediator,
-            pagingDatabase: PostDatabase,
-        ): Pager<Int, PostEntity> {
-            return Pager(
-                config = PagingConfig(
-                    pageSize = 5,
-                    initialLoadSize = 5,
-                    prefetchDistance = 10,
-                    enablePlaceholders = false
-                ),
-                remoteMediator = textPostRemoteMediator,
-                pagingSourceFactory = {
-                    pagingDatabase.postDao.pagingSource()
-                },
-            )
-        }
     }
 
 }

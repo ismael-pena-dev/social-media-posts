@@ -1,6 +1,5 @@
 package com.pena.ismael.socialmediapager.feature.postpager.repository.remote
 
-import android.util.Log
 import com.pena.ismael.socialmediapager.feature.postpager.repository.remote.dto.AlbumDto
 import com.pena.ismael.socialmediapager.feature.postpager.repository.remote.dto.CommentDto
 import com.pena.ismael.socialmediapager.feature.postpager.repository.remote.dto.PhotoDto
@@ -41,7 +40,7 @@ interface PostApi {
 class PostRemoteDataSource @Inject constructor(
     private val postApi: PostApi,
 ) {
-    suspend fun getPaginatedPosts(
+    suspend fun fetchPaginatedTextPosts(
         startIndex: Int,
         amountPerPage: Int,
     ): List<PostDto> {
