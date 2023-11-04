@@ -54,6 +54,12 @@ class PostRemoteDataSource @Inject constructor(
         }
     }
 
+    suspend fun fetchCommentsForPost(
+        postId: Int,
+    ): List<CommentDto> {
+        return postApi.getComments(postId)
+    }
+
     suspend fun fetchPaginatedAlbumPosts(
         startIndex: Int,
         amountPerPage: Int,

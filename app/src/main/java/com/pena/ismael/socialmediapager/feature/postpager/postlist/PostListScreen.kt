@@ -1,12 +1,11 @@
 package com.pena.ismael.socialmediapager.feature.postpager.postlist
 
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,58 +13,97 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import com.pena.ismael.socialmediapager.R
-import com.pena.ismael.socialmediapager.core.DarkLightPreview
+import androidx.navigation.NavHostController
 import com.pena.ismael.socialmediapager.core.DarkLightPreviewUI
-import com.pena.ismael.socialmediapager.feature.postpager.model.Post
 import com.pena.ismael.socialmediapager.feature.postpager.model.Post.AlbumPost
 import com.pena.ismael.socialmediapager.feature.postpager.model.Post.PhotoPost
 import com.pena.ismael.socialmediapager.feature.postpager.model.Post.TextPost
 import com.pena.ismael.socialmediapager.ui.theme.SocialMediaPagerTheme
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun PostListScreen(
-    viewModel: PostListViewModel = hiltViewModel()
+    viewModel: PostListViewModel = hiltViewModel(),
+    navController: NavHostController,
 ) {
     val textPosts = viewModel.textPosts.collectAsStateWithLifecycle(emptyList())
     val albumPosts = viewModel.albumPosts.collectAsStateWithLifecycle(emptyList())
+    val uiState = viewModel.uiState.collectAsStateWithLifecycle()
 
-//    val context = LocalContext.current
-//    LaunchedEffect(key1 = posts.loadState) {
-//        val loadState = posts.loadState.refresh
-//        if (loadState is LoadState.Error) {
-//            Toast.makeText(context, "Error: ${loadState.error.message}", Toast.LENGTH_SHORT).show()
-//        }
-//    }
+    val context = LocalContext.current
+    LaunchedEffect(key1 = uiState.value.errorMessage) {
+        val errorMessage = uiState.value.errorMessage
+        if (uiState.value.errorMessage != null) {
+            Toast.makeText(context, "Error: $errorMessage", Toast.LENGTH_SHORT).show()
+            viewModel.onErrorMessageShown()
+        }
+    }
+
+    LaunchedEffect(key1 = uiState.value.navigateToRoute) {
+        val route = uiState.value.navigateToRoute
+        if (route != null) {
+            navController.navigate(route)
+            viewModel.onNavigationHandled()
+        }
+    }
+
+    if (uiState.value.showDialogForDownloadingAlbum != null) {
+        val album = uiState.value.showDialogForDownloadingAlbum
+        AlertDialog(
+            onDismissRequest = viewModel::onDialogDismissRequest
+        ) {
+            Card {
+                Column(
+                    Modifier.padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Download ${album?.photos?.size} photos to storage?",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Text(text = "Album: (${album?.id}) ${album?.title}")
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                    ) {
+                        TextButton(
+                            onClick = viewModel::onDialogDismissRequest
+                        ) {
+                            Text(text = "Cancel")
+                        }
+                        Spacer(Modifier.width(16.dp))
+                        TextButton(
+                            onClick = {
+                                viewModel.onDialogDismissRequest()
+                                viewModel.onDownloadAlbum(album)
+                            }
+                        ) {
+                            Text(text = "Confirm")
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     val scrollState = rememberLazyListState()
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -74,7 +112,7 @@ fun PostListScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             state = scrollState,
         ) {
-            stickyHeader() {
+            stickyHeader {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -103,7 +141,8 @@ fun PostListScreen(
                 if (textPost != null) {
                     PostListItem(
                         post = textPost,
-                        onClick = viewModel::onPostClick
+                        onClick = viewModel::onPostClick,
+                        modifier = Modifier.padding(horizontal = 16.dp),
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
@@ -112,7 +151,8 @@ fun PostListScreen(
                 if (albumPost != null) {
                     PostListItem(
                         post = albumPost,
-                        onClick = viewModel::onPostClick
+                        onClick = viewModel::onPostClick,
+                        modifier = Modifier.padding(horizontal = 16.dp),
                     )
                 }
                 
@@ -187,187 +227,63 @@ fun PreviewPostListScreen() {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun PostListItem(
-    post: Post,
-    modifier: Modifier = Modifier,
-    onClick: (Post) -> Unit = {}
+fun PostDetailScreen(
+    viewModel: PostDetailViewModel = hiltViewModel()
 ) {
-    Card(
-        modifier = modifier
-            .clickable {
-                onClick(post)
-            }
-            .fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-    ) {
-        when (post) {
-            is TextPost -> TextPostListItemContent(post = post, modifier = Modifier
-                .padding(vertical = 24.dp)
-                .padding(horizontal = 16.dp))
-            is AlbumPost -> AlbumPostListItemContent(post = post, modifier = Modifier
-                .padding(vertical = 24.dp)
-                .padding(horizontal = 16.dp))
-            else -> {
-                // TODO
-            }
-        }
-    }
-}
+    val textPost = viewModel.post.collectAsStateWithLifecycle(null)
+    val comments = viewModel.comments.collectAsStateWithLifecycle(emptyList())
 
-@Composable
-fun UserIcon(
-    userId: Int,
-    modifier: Modifier = Modifier
-) {
-    val color = remember {
-        mutableLongStateOf(
-            when (userId) {
-                1 -> 0xFFEF5350
-                2 -> 0xFFAB47BC
-                3 -> 0xFF5C6BC0
-                4 -> 0xFF29B6F6
-                5 -> 0xFF26A69A
-                6 -> 0xFF66BB6A
-                7 -> 0xFFD4E157
-                8 -> 0xFFFFCA28
-                9 -> 0xFF8D6E63
-                else -> 0xFF78909C
-            }
-        )
-    }
-    Box(modifier = Modifier.size(48.dp)) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_launcher_foreground),
-            contentDescription = userId.toString(),
-            tint = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier
-                .size(48.dp),
-        )
-        Box(
-            modifier = modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .alpha(.7F)
-                .background(color = Color(color.value))
-        )
-    }
-}
+//    val context = LocalContext.current
+//    LaunchedEffect(key1 = posts.loadState) {
+//        val loadState = posts.loadState.refresh
+//        if (loadState is LoadState.Error) {
+//            Toast.makeText(context, "Error: ${loadState.error.message}", Toast.LENGTH_SHORT).show()
+//        }
+//    }
 
-@Composable
-fun TextPostListItemContent(
-    post: TextPost,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        UserIcon(userId = post.userId)
-        Column {
-            Text(
-                text =  "(${post.id}) " + post.title.replaceFirstChar { it.uppercaseChar() },
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = post.body.replaceFirstChar { it.uppercaseChar() },
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Light,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-    }
-}
-
-@DarkLightPreview
-@Composable
-fun PreviewTextPostListItem() {
-    SocialMediaPagerTheme {
-        Surface {
-            PostListItem(
-                post = TextPost(
-                    id = 1,
-                    userId = (1..10).random(),
-                    title = "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
-                    body = "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto",
-                )
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun AlbumPostListItemContent(
-    post: AlbumPost,
-    modifier: Modifier = Modifier,
-    previewLimit: Int = 3
-) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        UserIcon(userId = post.userId)
-        Column {
-            Text(
-                text = "(${post.id}) " + post.title.replaceFirstChar { it.uppercaseChar() },
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                post.photos
-                    .take(previewLimit)
-                    .forEach {  photo ->
-                        AsyncImage(
-                            modifier = Modifier.size(60.dp),
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(photo.thumbnailUrl)
-                                .crossfade(true)
-                                .placeholder(R.drawable.ic_launcher_foreground)
-                                .build(),
-                            contentDescription = photo.title
-                        )
-                }
-                if (post.photos.size > previewLimit) {
-                    Text(text = "(+${post.photos.size - previewLimit})")
+    val scrollState = rememberLazyListState()
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            state = scrollState,
+            contentPadding = PaddingValues(vertical = 32.dp, horizontal = 16.dp),
+        ) {
+            item {
+                val post = textPost.value
+                if (post == null) {
+                    // TODO: Loading
+                } else {
+                    PostListItem(
+                        post = post,
+                    )
                 }
             }
-        }
-    }
-}
 
-@DarkLightPreview
-@Composable
-fun PreviewAlbumPostListItem() {
-    SocialMediaPagerTheme {
-        Surface {
-            PostListItem(
-                post = AlbumPost(
-                    id = 1,
-                    userId = (1..10).random(),
-                    title = "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
-                    photos = listOf(
-                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                    ),
+            items(
+                items = comments.value,
+                key = { comment ->
+                    comment.id
+                }
+            ) { comment ->
+                PostListItem(
+                    post = comment,
+                    modifier = Modifier.padding(start = 32.dp)
                 )
-            )
+            }
+
+//            if(posts.loadState.append is LoadState.Loading || posts.loadState.refresh is LoadState.Loading) {
+//                item {
+//                    Row(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        horizontalArrangement = Arrangement.Center
+//                    ) {
+//                        CircularProgressIndicator()
+//                    }
+//                }
+//            }
         }
     }
 }

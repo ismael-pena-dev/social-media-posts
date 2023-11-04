@@ -59,6 +59,15 @@ object EntityToModelMapper {
         )
     }
 
+    fun CommentEntity.toCommentPost(): Post.CommentPost {
+        return Post.CommentPost(
+            id = commentId,
+            name = name,
+            email = email,
+            body = body
+        )
+    }
+
     fun AlbumEntity.toAlbumPost(photos: List<Post.PhotoPost> = emptyList()): Post.AlbumPost {
         return Post.AlbumPost(
             id = albumId,
