@@ -23,8 +23,10 @@ interface PostApi {
         @Path("post_id") postId: Int,
     ): List<CommentDto>
 
-    @GET("albums")
-    suspend fun getAlbums(): List<AlbumDto>
+    @GET("albums/{album_id}")
+    suspend fun getAlbum(
+        @Path("album_id") albumId: Int
+    ): AlbumDto
 
     @GET("albums/{album_id}/photos")
     suspend fun getPhotos(
@@ -50,5 +52,21 @@ class PostRemoteDataSource @Inject constructor(
                 async { postApi.getPost(currentId) }.await()
             }
         }
+    }
+
+    suspend fun fetchPaginatedAlbumPosts(
+        startIndex: Int,
+        amountPerPage: Int,
+    ): List<AlbumDto> {
+        return withContext(Dispatchers.IO) {
+            return@withContext (0 until amountPerPage).map {  counter ->
+                val currentId = startIndex + counter
+                async { postApi.getAlbum(currentId) }.await()
+            }
+        }
+    }
+
+    suspend fun fetchPhotosForAlbum(albumId: Int): List<PhotoDto> {
+        return postApi.getPhotos(albumId = albumId)
     }
 }

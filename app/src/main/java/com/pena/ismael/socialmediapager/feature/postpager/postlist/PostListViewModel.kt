@@ -10,7 +10,11 @@ import androidx.room.Query
 import androidx.room.RoomDatabase
 import androidx.room.Upsert
 import com.pena.ismael.socialmediapager.feature.postpager.model.Post
+import com.pena.ismael.socialmediapager.feature.postpager.repository.DtoToEntityMapper.toAlbumEntity
+import com.pena.ismael.socialmediapager.feature.postpager.repository.DtoToEntityMapper.toPhotoEntity
 import com.pena.ismael.socialmediapager.feature.postpager.repository.DtoToEntityMapper.toPostEntity
+import com.pena.ismael.socialmediapager.feature.postpager.repository.EntityToModelMapper.toAlbumPost
+import com.pena.ismael.socialmediapager.feature.postpager.repository.EntityToModelMapper.toPhotoPost
 import com.pena.ismael.socialmediapager.feature.postpager.repository.EntityToModelMapper.toTextPost
 import com.pena.ismael.socialmediapager.feature.postpager.repository.local.entity.AlbumEntity
 import com.pena.ismael.socialmediapager.feature.postpager.repository.local.entity.CommentEntity
@@ -18,9 +22,13 @@ import com.pena.ismael.socialmediapager.feature.postpager.repository.local.entit
 import com.pena.ismael.socialmediapager.feature.postpager.repository.local.entity.PostEntity
 import com.pena.ismael.socialmediapager.feature.postpager.repository.remote.PostRemoteDataSource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import java.io.IOException
 import javax.inject.Inject
@@ -29,7 +37,8 @@ import javax.inject.Inject
 class PostListViewModel @Inject constructor(
     private val postRepository: PostRepository
 ): ViewModel() {
-    val posts = postRepository.postsFlow
+    val textPosts = postRepository.textPostsFlow
+    val albumPosts = postRepository.albumPostsFlow
 
     init {
         loadInitial()
@@ -46,7 +55,7 @@ class PostListViewModel @Inject constructor(
             postRepository.fetchNextPosts(PAGE_SIZE)
         }
     }
-    
+
     fun onPostClick(post: Post) {
         // TODO: Navigate
     }
@@ -60,15 +69,54 @@ class PostRepository @Inject constructor(
     private val local: PostLocalDataSource,
     private val remote: PostRemoteDataSource,
 ) {
-    private val textPostsFlow = local.textPostsFlow
-    val postsFlow = textPostsFlow
+    val textPostsFlow = local.textPostsFlow
+        .map { entityList ->
+            entityList.map {  postEntity ->
+                postEntity.toTextPost()
+            }
+        }
+
+    private val albumDbFlow = local.albumPostsFlow
+    private val photoDbFlow = local.photoPostsFlow
+    val albumPostsFlow = combine(albumDbFlow, photoDbFlow) { albumEntities, photoEntities ->
+        albumEntities.map { albumEntity ->
+            val photos = photoEntities
+                .filter {
+                    it.albumId == albumEntity.albumId
+                }
+                .map {
+                    it.toPhotoPost()
+                }
+            albumEntity.toAlbumPost(photos = photos)
+        }
+    }
 
     suspend fun fetchNextPosts(pageSize: Int) {
         val lastIndex = local.getLastIndex()
         try {
-            val fetchedTextPosts = remote.fetchPaginatedTextPosts(startIndex = lastIndex + 1, amountPerPage = pageSize)
-            val textPostsEntities = fetchedTextPosts.map { it.toPostEntity() }
-            local.insertTextPosts(textPostsEntities)
+            withContext(Dispatchers.IO) {
+                // TextPosts
+                launch {
+                    val fetchedTextPosts = remote.fetchPaginatedTextPosts(startIndex = lastIndex + 1, amountPerPage = pageSize)
+                    local.insertTextPosts(textPosts = fetchedTextPosts.map { it.toPostEntity() })
+                }
+
+                // AlbumPosts
+                launch {
+                    val fetchedAlbumPosts = remote.fetchPaginatedAlbumPosts(startIndex = lastIndex + 1, amountPerPage = pageSize)
+                    launch {
+                        local.insertAlbumPosts(albumPosts = fetchedAlbumPosts.map { it.toAlbumEntity() })
+                    }
+                    launch {
+                        fetchedAlbumPosts.forEach { album ->
+                            launch {
+                                val fetchedPhotos = remote.fetchPhotosForAlbum(albumId = album.id)
+                                local.insertPhotoPosts(fetchedPhotos.map { it.toPhotoEntity() })
+                            }
+                        }
+                    }
+                }
+            }
         } catch (e: HttpException) {
             // TODO
         } catch (e: IOException) {
@@ -89,17 +137,37 @@ class PostRepository @Inject constructor(
 class PostLocalDataSource @Inject constructor(
     private val postDb: PostDatabase
 ) {
-    val textPostsFlow = postDb.postDao.getAll().map { entityList ->
-        entityList.map {  postEntity ->
-            postEntity.toTextPost()
-        }
-    }
+    val textPostsFlow = postDb.postDao.getAll()
+
+    val albumPostsFlow = postDb.albumDao.getAllAlbums()
+//        .map {  albumEntities ->
+//            albumEntities.map {  album ->
+//                album.toAlbumPost()
+//            }
+//        }
+
+    val photoPostsFlow = postDb.photoDao.getAllPhotos()
+
     suspend fun getLastIndex(): Int {
         return postDb.postDao.count()
     }
 
-    suspend fun insertTextPosts(textPosts: List<PostEntity>) {
+    suspend fun insertTextPosts(
+        textPosts: List<PostEntity>,
+    ) {
         postDb.postDao.insertAll(textPosts)
+    }
+
+    suspend fun insertAlbumPosts(
+        albumPosts: List<AlbumEntity>
+    ) {
+        postDb.albumDao.upsertAlbums(albumPosts)
+    }
+
+    suspend fun insertPhotoPosts(
+        photoPosts: List<PhotoEntity>
+    ) {
+        postDb.photoDao.upsertPhotos(photoPosts)
     }
 }
 
@@ -155,17 +223,26 @@ interface AlbumDao {
     fun getAllAlbums(): Flow<List<AlbumEntity>>
 
     @Upsert
-    suspend fun upsertAlbums(Albums: List<AlbumEntity>)
+    suspend fun upsertAlbums(albums: List<AlbumEntity>)
+
+    @Query("DELETE FROM AlbumEntity")
+    suspend fun deleteAll()
 }
 
 @Dao
 interface PhotoDao {
 
+    @Query("SELECT * FROM PhotoEntity")
+    fun getAllPhotos(): Flow<List<PhotoEntity>>
+
     @Query("SELECT * FROM PhotoEntity WHERE album_id == :albumId")
-    fun getPhotosForPost(albumId: Int): Flow<List<PhotoEntity>>
+    fun getPhotosForAlbum(albumId: Int): Flow<List<PhotoEntity>>
 
     @Upsert
-    suspend fun upsertPhotos(Photos: List<PhotoEntity>)
+    suspend fun upsertPhotos(photos: List<PhotoEntity>)
+
+    @Query("DELETE FROM PhotoEntity")
+    suspend fun deleteAll()
 }
 
 

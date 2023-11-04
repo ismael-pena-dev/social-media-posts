@@ -52,11 +52,28 @@ object DtoToEntityMapper {
 object EntityToModelMapper {
     fun PostEntity.toTextPost(): Post.TextPost {
         return Post.TextPost(
-            postId = postId,
+            id = postId,
             userId = userId,
             title = title,
             body = body,
-            comments = emptyList()
+        )
+    }
+
+    fun AlbumEntity.toAlbumPost(photos: List<Post.PhotoPost> = emptyList()): Post.AlbumPost {
+        return Post.AlbumPost(
+            id = albumId,
+            userId = userId,
+            title = title,
+            photos = photos
+        )
+    }
+
+    fun PhotoEntity.toPhotoPost(): Post.PhotoPost {
+        return Post.PhotoPost(
+            id = photoId,
+            title = title,
+            url = url,
+            thumbnailUrl = thumbnailUrl
         )
     }
 }

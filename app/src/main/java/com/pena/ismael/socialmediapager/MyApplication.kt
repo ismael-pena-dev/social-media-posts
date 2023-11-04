@@ -9,21 +9,21 @@ import coil.util.DebugLogger
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
-class MyApplication: Application(), ImageLoaderFactory {
+class MyApplication: Application() {
 
     // Setup COIL image loader to always cache images on disk
-    override fun newImageLoader(): ImageLoader {
-        return ImageLoader(this).newBuilder()
-            .memoryCachePolicy(CachePolicy.DISABLED)
-            .diskCachePolicy(CachePolicy.ENABLED)
-            .diskCache {
-                DiskCache.Builder()
-                    .maxSizePercent(.1)
-                    .directory(cacheDir)
-                    .build()
-            }
-            .logger(DebugLogger())
-            .build()
-    }
+//    override fun newImageLoader(): ImageLoader {
+//        return ImageLoader(this).newBuilder()
+//            .memoryCachePolicy(CachePolicy.DISABLED)
+//            .diskCachePolicy(CachePolicy.ENABLED)
+//            .diskCache {
+//                DiskCache.Builder()
+//                    .maxSizePercent(.1)
+//                    .directory(cacheDir)
+//                    .build()
+//            }
+//            .logger(DebugLogger())
+//            .build()
+//    }
 
 }

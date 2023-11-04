@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -46,9 +45,9 @@ import coil.request.ImageRequest
 import com.pena.ismael.socialmediapager.R
 import com.pena.ismael.socialmediapager.core.DarkLightPreview
 import com.pena.ismael.socialmediapager.core.DarkLightPreviewUI
-import com.pena.ismael.socialmediapager.feature.postpager.model.Photo
 import com.pena.ismael.socialmediapager.feature.postpager.model.Post
 import com.pena.ismael.socialmediapager.feature.postpager.model.Post.AlbumPost
+import com.pena.ismael.socialmediapager.feature.postpager.model.Post.PhotoPost
 import com.pena.ismael.socialmediapager.feature.postpager.model.Post.TextPost
 import com.pena.ismael.socialmediapager.ui.theme.SocialMediaPagerTheme
 
@@ -57,7 +56,8 @@ import com.pena.ismael.socialmediapager.ui.theme.SocialMediaPagerTheme
 fun PostListScreen(
     viewModel: PostListViewModel = hiltViewModel()
 ) {
-    val posts = viewModel.posts.collectAsStateWithLifecycle(emptyList())
+    val textPosts = viewModel.textPosts.collectAsStateWithLifecycle(emptyList())
+    val albumPosts = viewModel.albumPosts.collectAsStateWithLifecycle(emptyList())
 
 //    val context = LocalContext.current
 //    LaunchedEffect(key1 = posts.loadState) {
@@ -71,21 +71,52 @@ fun PostListScreen(
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             state = scrollState,
         ) {
-            itemsIndexed(
-                items = posts.value,
-                key = { _, post ->
-                    post.postId
+            stickyHeader() {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.primary)
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Text(
+                        text = "Text posts:${textPosts.value.size}",
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
+                    Text(
+                        text = "Album posts:${albumPosts.value.size}",
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
                 }
-            ) { index, post ->
-                PostListItem(
-                    post = post,
-                    onClick = viewModel::onPostClick
-                )
-                if (index == posts.value.lastIndex) {
+            }
+
+            items(
+                count = textPosts.value.size,
+                key = { index ->
+                    textPosts.value[index].id
+                }
+            ) { index ->
+                val textPost = textPosts.value.getOrNull(index)
+                if (textPost != null) {
+                    PostListItem(
+                        post = textPost,
+                        onClick = viewModel::onPostClick
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                val albumPost = albumPosts.value.getOrNull(index)
+                if (albumPost != null) {
+                    PostListItem(
+                        post = albumPost,
+                        onClick = viewModel::onPostClick
+                    )
+                }
+                
+                if (index == textPosts.value.lastIndex) {
                     viewModel.fetchNextPosts()
                 }
             }
@@ -111,37 +142,35 @@ fun PreviewPostListScreen() {
         Surface {
             val posts = listOf(
                 TextPost(
-                    postId = 1,
+                    id = 1,
                     userId = (1..10).random(),
                     title = "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
                     body = "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto",
-                    comments = emptyList()
                 ),
                 AlbumPost(
-                    postId = 1,
+                    id = 1,
                     userId = (1..10).random(),
                     title = "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
                     photos = listOf(
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
                     ),
                 ),
                 TextPost(
-                    postId = 1,
+                    id = 1,
                     userId = (1..10).random(),
                     title = "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
                     body = "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto",
-                    comments = emptyList()
                 )
             )
             LazyColumn(
@@ -165,9 +194,11 @@ fun PostListItem(
     onClick: (Post) -> Unit = {}
 ) {
     Card(
-        modifier = modifier.clickable {
-            onClick(post)
-        }.fillMaxWidth(),
+        modifier = modifier
+            .clickable {
+                onClick(post)
+            }
+            .fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         when (post) {
@@ -177,6 +208,9 @@ fun PostListItem(
             is AlbumPost -> AlbumPostListItemContent(post = post, modifier = Modifier
                 .padding(vertical = 24.dp)
                 .padding(horizontal = 16.dp))
+            else -> {
+                // TODO
+            }
         }
     }
 }
@@ -232,7 +266,7 @@ fun TextPostListItemContent(
         UserIcon(userId = post.userId)
         Column {
             Text(
-                text =  "(${post.postId}) " + post.title.replaceFirstChar { it.uppercaseChar() },
+                text =  "(${post.id}) " + post.title.replaceFirstChar { it.uppercaseChar() },
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -254,11 +288,10 @@ fun PreviewTextPostListItem() {
         Surface {
             PostListItem(
                 post = TextPost(
-                    postId = 1,
+                    id = 1,
                     userId = (1..10).random(),
                     title = "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
                     body = "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto",
-                    comments = emptyList()
                 )
             )
         }
@@ -270,7 +303,7 @@ fun PreviewTextPostListItem() {
 fun AlbumPostListItemContent(
     post: AlbumPost,
     modifier: Modifier = Modifier,
-    previewLimit: Int = 8
+    previewLimit: Int = 3
 ) {
     Row(
         modifier = modifier,
@@ -279,13 +312,14 @@ fun AlbumPostListItemContent(
         UserIcon(userId = post.userId)
         Column {
             Text(
-                text = post.title.replaceFirstChar { it.uppercaseChar() },
+                text = "(${post.id}) " + post.title.replaceFirstChar { it.uppercaseChar() },
                 style = MaterialTheme.typography.titleMedium,
             )
             Spacer(modifier = Modifier.height(8.dp))
-            FlowRow(
-                horizontalArrangement = Arrangement.Center,
-                maxItemsInEachRow = 5
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
             ) {
                 post.photos
                     .take(previewLimit)
@@ -301,14 +335,7 @@ fun AlbumPostListItemContent(
                         )
                 }
                 if (post.photos.size > previewLimit) {
-                    Icon(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .align(Alignment.CenterVertically)
-                            .alpha(.6F),
-                        painter = painterResource(id = R.drawable.baseline_more_horiz_24),
-                        contentDescription = "more"
-                    )
+                    Text(text = "(+${post.photos.size - previewLimit})")
                 }
             }
         }
@@ -322,22 +349,22 @@ fun PreviewAlbumPostListItem() {
         Surface {
             PostListItem(
                 post = AlbumPost(
-                    postId = 1,
+                    id = 1,
                     userId = (1..10).random(),
                     title = "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
                     photos = listOf(
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
-                        Photo(photoId = 52, albumId = 1, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
+                        PhotoPost(id = 52, title = "non sunt voluptatem placeat consequuntur rem incidunt", url = "https://via.placeholder.com/600/8e973b", thumbnailUrl = "https://via.placeholder.com/150/8e973b"),
                     ),
                 )
             )
