@@ -21,11 +21,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.room.Room
+import com.pena.ismael.socialmediapager.feature.postpager.postlist.AndroidDownloader
+import com.pena.ismael.socialmediapager.feature.postpager.postlist.Downloader
 import com.pena.ismael.socialmediapager.feature.postpager.repository.remote.PostApi
 import com.pena.ismael.socialmediapager.feature.postpager.postlist.PostDatabase
 import com.pena.ismael.socialmediapager.feature.postpager.postlist.PostDetailScreen
 import com.pena.ismael.socialmediapager.feature.postpager.postlist.PostListScreen
 import com.pena.ismael.socialmediapager.ui.theme.SocialMediaPagerTheme
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -34,6 +37,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
 
@@ -137,6 +141,11 @@ fun PostNavHost(
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class PostModule {
+
+    @Binds
+    abstract fun bindsDownloader(
+        impl: AndroidDownloader
+    ): Downloader
 
     companion object {
         @Provides
