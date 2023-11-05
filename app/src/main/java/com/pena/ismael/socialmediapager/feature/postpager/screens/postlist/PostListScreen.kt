@@ -5,7 +5,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,18 +12,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -34,10 +29,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import com.pena.ismael.socialmediapager.core.composable.connectivity.ConnectivityStatus
 import com.pena.ismael.socialmediapager.core.composable.preview.DarkLightPreviewUI
 import com.pena.ismael.socialmediapager.feature.postpager.model.Post.AlbumPost
 import com.pena.ismael.socialmediapager.feature.postpager.model.Post.PhotoPost
 import com.pena.ismael.socialmediapager.feature.postpager.model.Post.TextPost
+import com.pena.ismael.socialmediapager.feature.postpager.screens.postlist.components.DownloadAlbumAlert
 import com.pena.ismael.socialmediapager.feature.postpager.screens.postlist.components.PostListItem
 import com.pena.ismael.socialmediapager.ui.theme.SocialMediaPagerTheme
 
@@ -72,41 +69,13 @@ fun PostListScreen(
 
     if (uiState.value.showDialogForDownloadingAlbum != null) {
         val album = uiState.value.showDialogForDownloadingAlbum
-        AlertDialog(
-            onDismissRequest = viewModel::onDialogDismissRequest
-        ) {
-            Card {
-                Column(
-                    Modifier.padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Text(
-                        text = "Download ${album?.photos?.size} photos to storage?",
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    Text(text = "Album: (${album?.id}) ${album?.title}")
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End,
-                    ) {
-                        TextButton(
-                            onClick = viewModel::onDialogDismissRequest
-                        ) {
-                            Text(text = "Cancel")
-                        }
-                        Spacer(Modifier.width(16.dp))
-                        TextButton(
-                            onClick = {
-                                viewModel.onDialogDismissRequest()
-                                viewModel.onDownloadAlbum(album)
-                            }
-                        ) {
-                            Text(text = "Confirm")
-                        }
-                    }
-                }
+        DownloadAlbumAlert(
+            album = album,
+            onDialogDismissRequest = viewModel::onDialogDismissRequest,
+            onDownloadAlbum = {
+                viewModel.onDialogDismissRequest()
             }
-        }
+        )
     }
 
     val scrollState = rememberLazyListState()

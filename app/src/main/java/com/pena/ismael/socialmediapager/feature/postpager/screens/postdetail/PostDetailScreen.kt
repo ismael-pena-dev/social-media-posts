@@ -20,7 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pena.ismael.socialmediapager.feature.postpager.screens.postlist.ConnectivityStatus
+import com.pena.ismael.socialmediapager.core.composable.connectivity.ConnectivityStatus
 import com.pena.ismael.socialmediapager.feature.postpager.screens.postlist.components.PostListItem
 
 @OptIn(ExperimentalFoundationApi::class)
