@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -21,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pena.ismael.socialmediapager.feature.postpager.screens.postlist.ConnectivityStatus
 import com.pena.ismael.socialmediapager.feature.postpager.screens.postlist.components.PostListItem
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -32,6 +32,7 @@ fun PostDetailScreen(
     val comments = viewModel.comments.collectAsStateWithLifecycle(emptyList())
     val errorMessage = viewModel.errorMessage.collectAsStateWithLifecycle()
     val isLoading = viewModel.isLoading.collectAsStateWithLifecycle()
+    val connectivity = viewModel.connectivityStatusObserver.collectAsStateWithLifecycle(initialValue = viewModel.getCurrentConnectivityStatus())
 
     val context = LocalContext.current
     LaunchedEffect(key1 = errorMessage.value) {
@@ -41,14 +42,20 @@ fun PostDetailScreen(
         }
     }
 
-    val scrollState = rememberLazyListState()
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
-            state = scrollState,
             contentPadding = PaddingValues(vertical = 32.dp, horizontal = 16.dp),
         ) {
+
+            item {
+                ConnectivityStatus(
+                    status = connectivity.value,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
             item {
                 val post = textPost.value
                 if (post == null) {

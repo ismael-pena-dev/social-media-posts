@@ -2,6 +2,7 @@ package com.pena.ismael.socialmediapager.feature.postpager.screens.postlist
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pena.ismael.socialmediapager.core.services.connectivityobserver.ConnectivityObserver
 import com.pena.ismael.socialmediapager.core.services.downloadmanager.Downloader
 import com.pena.ismael.socialmediapager.feature.postpager.model.Post
 import com.pena.ismael.socialmediapager.feature.postpager.navigation.PostNavRoute
@@ -19,6 +20,7 @@ import javax.inject.Inject
 class PostListViewModel @Inject constructor(
     private val postRepository: PostRepository,
     private val fileDownloader: Downloader,
+    private val connectivityObserver: ConnectivityObserver,
 ): ViewModel() {
     private val _uiState = MutableStateFlow(PostListUiState())
     val uiState: StateFlow<PostListUiState>
@@ -28,6 +30,7 @@ class PostListViewModel @Inject constructor(
     val albumPosts = postRepository.albumPostsFlow
     val errorMessage = postRepository.errorMessage
     val isLoading = postRepository.isLoading
+    val connectivityStatus = connectivityObserver.observe()
 
     init {
         loadInitial()
@@ -78,6 +81,12 @@ class PostListViewModel @Inject constructor(
                 fileName = photo.title
             )
         }
+    }
+
+    fun getCurrentConnectivityStatus(): ConnectivityObserver.Status {
+        return if (connectivityObserver.isConnectionAvailable())
+            ConnectivityObserver.Status.Available
+        else ConnectivityObserver.Status.Unavailable
     }
 
     companion object {

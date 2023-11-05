@@ -3,6 +3,7 @@ package com.pena.ismael.socialmediapager.feature.postpager.screens.postdetail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pena.ismael.socialmediapager.core.services.connectivityobserver.ConnectivityObserver
 import com.pena.ismael.socialmediapager.feature.postpager.model.Post
 import com.pena.ismael.socialmediapager.feature.postpager.repository.PostRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,6 +17,7 @@ import javax.inject.Inject
 class PostDetailViewModel @Inject constructor(
     private val postRepository: PostRepository,
     savedStateHandle: SavedStateHandle,
+    private val connectivityObserver: ConnectivityObserver,
 ): ViewModel() {
     private val postId: Int = checkNotNull(savedStateHandle["post_id"])
 
@@ -29,6 +31,7 @@ class PostDetailViewModel @Inject constructor(
 
     val errorMessage = postRepository.errorMessage
     val isLoading = postRepository.isLoading
+    val connectivityStatusObserver = connectivityObserver.observe()
 
     init {
         viewModelScope.launch {
@@ -45,5 +48,11 @@ class PostDetailViewModel @Inject constructor(
 
     fun onErrorMessageShown() {
         postRepository.onErrorConsumed()
+    }
+
+    fun getCurrentConnectivityStatus(): ConnectivityObserver.Status {
+        return if (connectivityObserver.isConnectionAvailable())
+            ConnectivityObserver.Status.Available
+        else ConnectivityObserver.Status.Unavailable
     }
 }

@@ -1,7 +1,11 @@
 package com.pena.ismael.socialmediapager.feature.postpager.di
 
+import android.app.DownloadManager
 import android.content.Context
+import android.net.ConnectivityManager
 import androidx.room.Room
+import com.pena.ismael.socialmediapager.core.services.connectivityobserver.ConnectivityObserver
+import com.pena.ismael.socialmediapager.core.services.connectivityobserver.NetworkConnectivityObserver
 import com.pena.ismael.socialmediapager.core.services.downloadmanager.ImageDownloader
 import com.pena.ismael.socialmediapager.core.services.downloadmanager.Downloader
 import com.pena.ismael.socialmediapager.feature.postpager.repository.local.PostDatabase
@@ -25,6 +29,11 @@ abstract class PostModule {
     abstract fun bindsDownloader(
         impl: ImageDownloader
     ): Downloader
+
+    @Binds
+    abstract fun bindsConnectivityObserver(
+        impl: NetworkConnectivityObserver
+    ): ConnectivityObserver
 
     companion object {
         @Provides
@@ -55,6 +64,22 @@ abstract class PostModule {
             @Named("post") retrofit: Retrofit
         ): PostApi {
             return retrofit.create(PostApi::class.java)
+        }
+
+        @Provides
+        @Singleton
+        fun provideConnectivityManager(
+            @ApplicationContext context: Context,
+        ): ConnectivityManager? {
+            return context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+        }
+
+        @Provides
+        @Singleton
+        fun provideDownloadManager(
+            @ApplicationContext context: Context,
+        ): DownloadManager? {
+            return context.getSystemService(DownloadManager::class.java)
         }
 
     }

@@ -52,6 +52,7 @@ fun PostListScreen(
     val uiState = viewModel.uiState.collectAsStateWithLifecycle()
     val errorMessage = viewModel.errorMessage.collectAsStateWithLifecycle()
     val isLoading = viewModel.isLoading.collectAsStateWithLifecycle()
+    val connectivity = viewModel.connectivityStatus.collectAsStateWithLifecycle(viewModel.getCurrentConnectivityStatus())
 
     val context = LocalContext.current
     LaunchedEffect(key1 = errorMessage.value) {
@@ -132,6 +133,13 @@ fun PostListScreen(
                         color = MaterialTheme.colorScheme.onPrimary,
                     )
                 }
+            }
+
+            item {
+                ConnectivityStatus(
+                    status = connectivity.value,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                )
             }
 
             items(
