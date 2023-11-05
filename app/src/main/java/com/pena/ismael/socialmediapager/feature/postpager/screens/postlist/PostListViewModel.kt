@@ -26,13 +26,23 @@ class PostListViewModel @Inject constructor(
     val uiState: StateFlow<PostListUiState>
         get() = _uiState
 
-    val textPosts = postRepository.textPostsFlow
-    val albumPosts = postRepository.albumPostsFlow
+    private val _textPosts = MutableStateFlow<List<Post.TextPost>>(emptyList())
+    val textPosts: StateFlow<List<Post.TextPost>>
+        get() = _textPosts
+
+    private val _albumPosts = MutableStateFlow<List<Post.AlbumPost>>(emptyList())
+    val albumPosts: StateFlow<List<Post.AlbumPost>>
+        get() = _albumPosts
+
     val errorMessage = postRepository.errorMessage
     val isLoading = postRepository.isLoading
     val connectivityStatus = connectivityObserver.observe()
 
     init {
+        viewModelScope.launch {
+            _textPosts.value = postRepository.textPostsFlow.stateIn(viewModelScope).value
+            _albumPosts.value = postRepository.albumPostsFlow.stateIn(viewModelScope).value
+        }
         loadInitial()
     }
 

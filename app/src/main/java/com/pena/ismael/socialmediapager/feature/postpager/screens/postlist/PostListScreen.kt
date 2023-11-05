@@ -44,8 +44,8 @@ fun PostListScreen(
     viewModel: PostListViewModel = hiltViewModel(),
     navController: NavHostController,
 ) {
-    val textPosts = viewModel.textPosts.collectAsStateWithLifecycle(emptyList())
-    val albumPosts = viewModel.albumPosts.collectAsStateWithLifecycle(emptyList())
+    val textPosts = viewModel.textPosts.collectAsStateWithLifecycle()
+    val albumPosts = viewModel.albumPosts.collectAsStateWithLifecycle()
     val uiState = viewModel.uiState.collectAsStateWithLifecycle()
     val errorMessage = viewModel.errorMessage.collectAsStateWithLifecycle()
     val isLoading = viewModel.isLoading.collectAsStateWithLifecycle()
@@ -78,12 +78,11 @@ fun PostListScreen(
         )
     }
 
-    val scrollState = rememberLazyListState()
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            state = scrollState,
+            state = rememberLazyListState(),
         ) {
             stickyHeader {
                 Row(
@@ -107,7 +106,9 @@ fun PostListScreen(
             item {
                 ConnectivityStatus(
                     status = connectivity.value,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
                 )
             }
 
