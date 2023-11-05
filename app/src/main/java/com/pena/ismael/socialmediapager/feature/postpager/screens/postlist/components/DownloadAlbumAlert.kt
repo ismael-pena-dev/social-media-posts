@@ -26,7 +26,7 @@ import com.pena.ismael.socialmediapager.ui.theme.SocialMediaPagerTheme
 fun DownloadAlbumAlert(
     album: Post.AlbumPost?,
     onDialogDismissRequest: () -> Unit = {},
-    onDownloadAlbum: () -> Unit = {},
+    onDownloadAlbum: (Post.AlbumPost?) -> Unit = {},
 ) {
     AlertDialog(
         onDismissRequest = onDialogDismissRequest
@@ -54,7 +54,7 @@ fun DownloadAlbumAlert(
                     TextButton(
                         onClick = {
                             onDialogDismissRequest()
-                            onDownloadAlbum()
+                            onDownloadAlbum(album)
                         }
                     ) {
                         Text(text = "Confirm")

@@ -73,7 +73,7 @@ fun PostListScreen(
             album = album,
             onDialogDismissRequest = viewModel::onDialogDismissRequest,
             onDownloadAlbum = {
-                viewModel.onDialogDismissRequest()
+                viewModel.onDownloadAlbum(album)
             }
         )
     }

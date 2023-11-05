@@ -86,10 +86,12 @@ class PostListViewModel @Inject constructor(
         }
 
         album.photos.forEach { photo ->
-            fileDownloader.downloadImage(
-                url = photo.url,
-                fileName = photo.title
-            )
+            viewModelScope.launch {
+                fileDownloader.downloadImage(
+                    url = photo.url,
+                    fileName = photo.title
+                )
+            }
         }
     }
 
