@@ -9,6 +9,9 @@ import com.pena.ismael.socialmediapager.feature.postpager.repository.PostReposit
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,6 +26,8 @@ class PostListViewModel @Inject constructor(
 
     val textPosts = postRepository.textPostsFlow
     val albumPosts = postRepository.albumPostsFlow
+    val errorMessage = postRepository.errorMessage
+    val isLoading = postRepository.isLoading
 
     init {
         loadInitial()
@@ -51,7 +56,7 @@ class PostListViewModel @Inject constructor(
     }
 
     fun onErrorMessageShown() {
-        _uiState.value = _uiState.value.copy(errorMessage = null)
+        postRepository.onErrorConsumed()
     }
 
     fun onDialogDismissRequest() {

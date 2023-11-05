@@ -14,11 +14,6 @@ class PostLocalDataSource @Inject constructor(
     val textPostsFlow = postDb.postDao.getAll()
 
     val albumPostsFlow = postDb.albumDao.getAllAlbums()
-//        .map {  albumEntities ->
-//            albumEntities.map {  album ->
-//                album.toAlbumPost()
-//            }
-//        }
 
     val photoPostsFlow = postDb.photoDao.getAllPhotos()
 

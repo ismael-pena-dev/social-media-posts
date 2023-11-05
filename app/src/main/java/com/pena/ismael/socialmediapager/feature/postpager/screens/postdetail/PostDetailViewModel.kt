@@ -27,6 +27,9 @@ class PostDetailViewModel @Inject constructor(
     val comments: StateFlow<List<Post.CommentPost>>
         get() = _comments
 
+    val errorMessage = postRepository.errorMessage
+    val isLoading = postRepository.isLoading
+
     init {
         viewModelScope.launch {
             postRepository.getTextPostFlow(postId).collectLatest { post ->
@@ -38,5 +41,9 @@ class PostDetailViewModel @Inject constructor(
                 _comments.value = comments
             }
         }
+    }
+
+    fun onErrorMessageShown() {
+        postRepository.onErrorConsumed()
     }
 }

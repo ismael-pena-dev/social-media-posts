@@ -1,17 +1,23 @@
 package com.pena.ismael.socialmediapager.feature.postpager.screens.postdetail
 
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -24,14 +30,16 @@ fun PostDetailScreen(
 ) {
     val textPost = viewModel.post.collectAsStateWithLifecycle(null)
     val comments = viewModel.comments.collectAsStateWithLifecycle(emptyList())
+    val errorMessage = viewModel.errorMessage.collectAsStateWithLifecycle()
+    val isLoading = viewModel.isLoading.collectAsStateWithLifecycle()
 
-//    val context = LocalContext.current
-//    LaunchedEffect(key1 = posts.loadState) {
-//        val loadState = posts.loadState.refresh
-//        if (loadState is LoadState.Error) {
-//            Toast.makeText(context, "Error: ${loadState.error.message}", Toast.LENGTH_SHORT).show()
-//        }
-//    }
+    val context = LocalContext.current
+    LaunchedEffect(key1 = errorMessage.value) {
+        if (errorMessage.value != null) {
+            Toast.makeText(context, "Error: $errorMessage", Toast.LENGTH_SHORT).show()
+            viewModel.onErrorMessageShown()
+        }
+    }
 
     val scrollState = rememberLazyListState()
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -64,16 +72,16 @@ fun PostDetailScreen(
                 )
             }
 
-//            if(posts.loadState.append is LoadState.Loading || posts.loadState.refresh is LoadState.Loading) {
-//                item {
-//                    Row(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        horizontalArrangement = Arrangement.Center
-//                    ) {
-//                        CircularProgressIndicator()
-//                    }
-//                }
-//            }
+            if(isLoading.value) {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+            }
         }
     }
 }

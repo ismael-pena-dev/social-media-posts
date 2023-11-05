@@ -25,7 +25,7 @@ fun PostNavHost(
     }
     NavHost(
         navController = navController,
-        startDestination = "posts",
+        startDestination = PostNavRoute.PostList.route,
         modifier = Modifier.fillMaxSize()
     ) {
         composable(

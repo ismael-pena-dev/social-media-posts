@@ -1,5 +1,6 @@
 package com.pena.ismael.socialmediapager.feature.postpager.repository
 
+import com.pena.ismael.socialmediapager.core.networking.NetworkResult
 import com.pena.ismael.socialmediapager.feature.postpager.model.Post
 import com.pena.ismael.socialmediapager.feature.postpager.repository.local.PostLocalDataSource
 import com.pena.ismael.socialmediapager.feature.postpager.repository.mappers.DtoToEntityMapper.toAlbumEntity
@@ -13,12 +14,12 @@ import com.pena.ismael.socialmediapager.feature.postpager.repository.mappers.Ent
 import com.pena.ismael.socialmediapager.feature.postpager.repository.remote.PostRemoteDataSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import retrofit2.HttpException
-import java.io.IOException
 import javax.inject.Inject
 
 class PostRepository @Inject constructor(
@@ -31,6 +32,14 @@ class PostRepository @Inject constructor(
                 postEntity.toTextPost()
             }
         }
+
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?>
+        get() = _errorMessage
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean>
+        get() = _isLoading
 
     private val albumDbFlow = local.albumPostsFlow
     private val photoDbFlow = local.photoPostsFlow
@@ -49,42 +58,66 @@ class PostRepository @Inject constructor(
 
     suspend fun fetchNextPosts(pageSize: Int) {
         val lastIndex = local.getLastIndex()
-        try {
-            withContext(Dispatchers.IO) {
-                // TextPosts
-                launch {
-                    val fetchedTextPosts = remote.fetchPaginatedTextPosts(
-                        startIndex = lastIndex + 1,
-                        amountPerPage = pageSize
-                    )
-                    local.insertTextPosts(textPosts = fetchedTextPosts.map { it.toPostEntity() })
-                }
+        withContext(Dispatchers.IO) {
+            // TextPosts
+            launch {
+                setIsLoading(true)
+                val networkResult = remote.fetchPaginatedTextPosts(
+                    startIndex = lastIndex + 1,
+                    amountPerPage = pageSize
+                )
+                setIsLoading(false)
 
-                // AlbumPosts
-                launch {
-                    val fetchedAlbumPosts = remote.fetchPaginatedAlbumPosts(
-                        startIndex = lastIndex + 1,
-                        amountPerPage = pageSize
-                    )
-                    launch {
-                        local.insertAlbumPosts(albumPosts = fetchedAlbumPosts.map { it.toAlbumEntity() })
+                when (networkResult) {
+                    is NetworkResult.Success -> {
+                        val fetchedTextPosts = networkResult.data
+                        local.insertTextPosts(textPosts = fetchedTextPosts.map { it.toPostEntity() })
                     }
-                    launch {
-                        fetchedAlbumPosts.forEach { album ->
-                            launch {
-                                val fetchedPhotos = remote.fetchPhotosForAlbum(albumId = album.id)
-                                local.insertPhotoPosts(fetchedPhotos.map { it.toPhotoEntity() })
-                            }
-                        }
+                    is NetworkResult.Error -> {
+                        setErrorMessage(networkResult.message)
                     }
                 }
             }
-        } catch (e: HttpException) {
-            // TODO
-        } catch (e: IOException) {
-            // TODO
-        } catch (e: Exception) {
-            // TODO
+
+            // AlbumPosts
+            launch {
+                setIsLoading(true)
+                val fetchAlbumsResult = remote.fetchPaginatedAlbumPosts(
+                    startIndex = lastIndex + 1,
+                    amountPerPage = pageSize
+                )
+                setIsLoading(false)
+
+                when (fetchAlbumsResult) {
+                    is NetworkResult.Success -> {
+                        val fetchedAlbumPosts = fetchAlbumsResult.data
+                        launch {
+                            local.insertAlbumPosts(albumPosts = fetchedAlbumPosts.map { it.toAlbumEntity() })
+                        }
+                        launch {
+                            fetchedAlbumPosts.forEach { album ->
+                                launch {
+                                    setIsLoading(true)
+                                    val fetchPhotosResult = remote.fetchPhotosForAlbum(albumId = album.id)
+                                    setIsLoading(true)
+                                    when (fetchPhotosResult) {
+                                        is NetworkResult.Success -> {
+                                            val fetchedPhotos = fetchPhotosResult.data
+                                            local.insertPhotoPosts(fetchedPhotos.map { it.toPhotoEntity() })
+                                        }
+                                        is NetworkResult.Error -> {
+                                            setErrorMessage(fetchPhotosResult.message)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    is NetworkResult.Error -> {
+                        setErrorMessage(fetchAlbumsResult.message)
+                    }
+                }
+            }
         }
     }
 
@@ -107,8 +140,18 @@ class PostRepository @Inject constructor(
                 // Fetch and cache remote only if it isn't cached already
                 val cachedComments = local.getCommentsForPost(postId)
                 if (cachedComments.isEmpty()) {
-                    val fetchedComments = remote.fetchCommentsForPost(postId)
-                    local.insertComments(fetchedComments.map { it.toCommentEntity() })
+                    setIsLoading(true)
+                    val networkResult = remote.fetchCommentsForPost(postId)
+                    setIsLoading(false)
+                    when (networkResult) {
+                        is NetworkResult.Success -> {
+                            val fetchedComments = networkResult.data
+                            local.insertComments(fetchedComments.map { it.toCommentEntity() })
+                        }
+                        is NetworkResult.Error -> {
+                            setErrorMessage(networkResult.message)
+                        }
+                    }
                 }
             }
         }
@@ -117,5 +160,17 @@ class PostRepository @Inject constructor(
                 comment.toCommentPost()
             }
         }
+    }
+
+    fun onErrorConsumed() {
+        setErrorMessage(null)
+    }
+
+    private fun setErrorMessage(error: String?) {
+        _errorMessage.value = error
+    }
+
+    private fun setIsLoading(isLoading: Boolean) {
+        _isLoading.value = isLoading
     }
 }
