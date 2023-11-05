@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -34,6 +35,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.pena.ismael.socialmediapager.R
 import com.pena.ismael.socialmediapager.core.composable.preview.DarkLightPreview
+import com.pena.ismael.socialmediapager.core.composable.shimmer.shimmerEffect
 import com.pena.ismael.socialmediapager.feature.postpager.model.Post
 import com.pena.ismael.socialmediapager.ui.theme.SocialMediaPagerTheme
 
@@ -268,6 +270,51 @@ fun PreviewAlbumPostListItem() {
                     ),
                 )
             )
+        }
+    }
+}
+
+@Composable fun PostShimmer(
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .shimmerEffect()
+            )
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                repeat(2) {
+                    Box(modifier = Modifier.fillMaxWidth()
+                        .height(24.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .shimmerEffect()
+                    )
+                }
+            }
+        }
+    }
+}
+
+@DarkLightPreview
+@Composable
+fun PreviewPostShimmer() {
+    SocialMediaPagerTheme {
+        Surface {
+            PostShimmer()
         }
     }
 }

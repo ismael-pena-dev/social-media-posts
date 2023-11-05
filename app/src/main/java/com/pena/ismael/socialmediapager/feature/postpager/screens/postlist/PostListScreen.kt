@@ -5,6 +5,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -36,6 +36,7 @@ import com.pena.ismael.socialmediapager.feature.postpager.model.Post.PhotoPost
 import com.pena.ismael.socialmediapager.feature.postpager.model.Post.TextPost
 import com.pena.ismael.socialmediapager.feature.postpager.screens.postlist.components.DownloadAlbumAlert
 import com.pena.ismael.socialmediapager.feature.postpager.screens.postlist.components.PostListItem
+import com.pena.ismael.socialmediapager.feature.postpager.screens.postlist.components.PostShimmer
 import com.pena.ismael.socialmediapager.ui.theme.SocialMediaPagerTheme
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -144,11 +145,13 @@ fun PostListScreen(
 
             if(isLoading.value) {
                 item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        CircularProgressIndicator()
+                        PostShimmer()
+                        PostShimmer()
+                        PostShimmer()
                     }
                 }
             }
