@@ -1,4 +1,4 @@
-package com.pena.ismael.socialmediapager.core
+package com.pena.ismael.socialmediapager.core.composable.preview
 
 import android.content.res.Configuration
 import androidx.compose.ui.tooling.preview.Preview

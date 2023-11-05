@@ -1,4 +1,4 @@
-package com.pena.ismael.socialmediapager.feature.postpager.postlist
+package com.pena.ismael.socialmediapager.feature.postpager.screens.postlist
 
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -33,10 +33,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import com.pena.ismael.socialmediapager.core.DarkLightPreviewUI
+import com.pena.ismael.socialmediapager.core.composable.preview.DarkLightPreviewUI
 import com.pena.ismael.socialmediapager.feature.postpager.model.Post.AlbumPost
 import com.pena.ismael.socialmediapager.feature.postpager.model.Post.PhotoPost
 import com.pena.ismael.socialmediapager.feature.postpager.model.Post.TextPost
+import com.pena.ismael.socialmediapager.feature.postpager.screens.postlist.components.PostListItem
 import com.pena.ismael.socialmediapager.ui.theme.SocialMediaPagerTheme
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -227,63 +228,3 @@ fun PreviewPostListScreen() {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun PostDetailScreen(
-    viewModel: PostDetailViewModel = hiltViewModel()
-) {
-    val textPost = viewModel.post.collectAsStateWithLifecycle(null)
-    val comments = viewModel.comments.collectAsStateWithLifecycle(emptyList())
-
-//    val context = LocalContext.current
-//    LaunchedEffect(key1 = posts.loadState) {
-//        val loadState = posts.loadState.refresh
-//        if (loadState is LoadState.Error) {
-//            Toast.makeText(context, "Error: ${loadState.error.message}", Toast.LENGTH_SHORT).show()
-//        }
-//    }
-
-    val scrollState = rememberLazyListState()
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            state = scrollState,
-            contentPadding = PaddingValues(vertical = 32.dp, horizontal = 16.dp),
-        ) {
-            item {
-                val post = textPost.value
-                if (post == null) {
-                    // TODO: Loading
-                } else {
-                    PostListItem(
-                        post = post,
-                    )
-                }
-            }
-
-            items(
-                items = comments.value,
-                key = { comment ->
-                    comment.id
-                }
-            ) { comment ->
-                PostListItem(
-                    post = comment,
-                    modifier = Modifier.padding(start = 32.dp)
-                )
-            }
-
-//            if(posts.loadState.append is LoadState.Loading || posts.loadState.refresh is LoadState.Loading) {
-//                item {
-//                    Row(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        horizontalArrangement = Arrangement.Center
-//                    ) {
-//                        CircularProgressIndicator()
-//                    }
-//                }
-//            }
-        }
-    }
-}

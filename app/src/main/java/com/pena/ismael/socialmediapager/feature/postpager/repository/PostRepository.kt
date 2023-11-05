@@ -1,16 +1,15 @@
-package com.pena.ismael.socialmediapager.feature.postpager.postlist
+package com.pena.ismael.socialmediapager.feature.postpager.repository
 
 import com.pena.ismael.socialmediapager.feature.postpager.model.Post
-import com.pena.ismael.socialmediapager.feature.postpager.repository.DtoToEntityMapper.toAlbumEntity
-import com.pena.ismael.socialmediapager.feature.postpager.repository.DtoToEntityMapper.toCommentEntity
-import com.pena.ismael.socialmediapager.feature.postpager.repository.DtoToEntityMapper.toPhotoEntity
-import com.pena.ismael.socialmediapager.feature.postpager.repository.DtoToEntityMapper.toPostEntity
-import com.pena.ismael.socialmediapager.feature.postpager.repository.EntityToModelMapper.toAlbumPost
-import com.pena.ismael.socialmediapager.feature.postpager.repository.EntityToModelMapper.toCommentPost
-import com.pena.ismael.socialmediapager.feature.postpager.repository.EntityToModelMapper.toPhotoPost
-import com.pena.ismael.socialmediapager.feature.postpager.repository.EntityToModelMapper.toTextPost
-import com.pena.ismael.socialmediapager.feature.postpager.repository.local.entity.CommentEntity
-import com.pena.ismael.socialmediapager.feature.postpager.repository.local.entity.PostEntity
+import com.pena.ismael.socialmediapager.feature.postpager.repository.local.PostLocalDataSource
+import com.pena.ismael.socialmediapager.feature.postpager.repository.mappers.DtoToEntityMapper.toAlbumEntity
+import com.pena.ismael.socialmediapager.feature.postpager.repository.mappers.DtoToEntityMapper.toCommentEntity
+import com.pena.ismael.socialmediapager.feature.postpager.repository.mappers.DtoToEntityMapper.toPhotoEntity
+import com.pena.ismael.socialmediapager.feature.postpager.repository.mappers.DtoToEntityMapper.toPostEntity
+import com.pena.ismael.socialmediapager.feature.postpager.repository.mappers.EntityToModelMapper.toAlbumPost
+import com.pena.ismael.socialmediapager.feature.postpager.repository.mappers.EntityToModelMapper.toCommentPost
+import com.pena.ismael.socialmediapager.feature.postpager.repository.mappers.EntityToModelMapper.toPhotoPost
+import com.pena.ismael.socialmediapager.feature.postpager.repository.mappers.EntityToModelMapper.toTextPost
 import com.pena.ismael.socialmediapager.feature.postpager.repository.remote.PostRemoteDataSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow

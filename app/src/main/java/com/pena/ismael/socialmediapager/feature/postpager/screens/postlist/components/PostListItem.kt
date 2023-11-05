@@ -1,4 +1,4 @@
-package com.pena.ismael.socialmediapager.feature.postpager.postlist
+package com.pena.ismael.socialmediapager.feature.postpager.screens.postlist.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.pena.ismael.socialmediapager.R
-import com.pena.ismael.socialmediapager.core.DarkLightPreview
+import com.pena.ismael.socialmediapager.core.composable.preview.DarkLightPreview
 import com.pena.ismael.socialmediapager.feature.postpager.model.Post
 import com.pena.ismael.socialmediapager.ui.theme.SocialMediaPagerTheme
 
