@@ -8,12 +8,14 @@ import com.pena.ismael.socialmediapager.feature.postpager.model.Post
 import com.pena.ismael.socialmediapager.feature.postpager.navigation.PostNavRoute
 import com.pena.ismael.socialmediapager.feature.postpager.repository.PostRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,6 +24,7 @@ class PostListViewModel @Inject constructor(
     private val fileDownloader: Downloader,
     private val connectivityObserver: ConnectivityObserver,
 ): ViewModel() {
+
     private val _uiState = MutableStateFlow(PostListUiState())
     val uiState: StateFlow<PostListUiState>
         get() = _uiState
@@ -40,8 +43,14 @@ class PostListViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            _textPosts.value = postRepository.textPostsFlow.stateIn(viewModelScope).value
-            _albumPosts.value = postRepository.albumPostsFlow.stateIn(viewModelScope).value
+            postRepository.textPostsFlow.collectLatest {
+                _textPosts.value = it
+            }
+        }
+        viewModelScope.launch {
+            postRepository.albumPostsFlow.collectLatest {
+                _albumPosts.value = it
+            }
         }
         loadInitial()
     }
@@ -53,7 +62,7 @@ class PostListViewModel @Inject constructor(
     }
 
     fun fetchNextPosts() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             postRepository.fetchNextPosts(PAGE_SIZE)
         }
     }
@@ -85,14 +94,17 @@ class PostListViewModel @Inject constructor(
             return
         }
 
-        album.photos.forEach { photo ->
-            viewModelScope.launch {
-                fileDownloader.downloadImage(
-                    url = photo.url,
-                    fileName = photo.title
-                )
+        viewModelScope.launch(Dispatchers.IO) {
+            album.photos.forEach { photo ->
+                launch {
+                    fileDownloader.downloadImage(
+                        url = photo.url,
+                        fileName = photo.title
+                    )
+                }
             }
         }
+
     }
 
     fun getCurrentConnectivityStatus(): ConnectivityObserver.Status {
