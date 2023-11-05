@@ -1,7 +1,6 @@
 package com.pena.ismael.socialmediapager.feature.postpager.screens.postdetail
 
 import android.widget.Toast
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,7 +22,6 @@ import com.pena.ismael.socialmediapager.core.composable.connectivity.Connectivit
 import com.pena.ismael.socialmediapager.feature.postpager.screens.postlist.components.PostListItem
 import com.pena.ismael.socialmediapager.feature.postpager.screens.postlist.components.PostShimmer
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PostDetailScreen(
     viewModel: PostDetailViewModel = hiltViewModel()

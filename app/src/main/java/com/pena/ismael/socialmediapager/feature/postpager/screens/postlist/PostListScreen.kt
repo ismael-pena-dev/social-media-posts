@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -39,7 +38,7 @@ import com.pena.ismael.socialmediapager.feature.postpager.screens.postlist.compo
 import com.pena.ismael.socialmediapager.feature.postpager.screens.postlist.components.PostShimmer
 import com.pena.ismael.socialmediapager.ui.theme.SocialMediaPagerTheme
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PostListScreen(
     viewModel: PostListViewModel = hiltViewModel(),
