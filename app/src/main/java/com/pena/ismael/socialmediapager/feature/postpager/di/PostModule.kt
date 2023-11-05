@@ -4,10 +4,11 @@ import android.app.DownloadManager
 import android.content.Context
 import android.net.ConnectivityManager
 import androidx.room.Room
+import com.pena.ismael.socialmediapager.core.networking.LogHttpInterceptor
 import com.pena.ismael.socialmediapager.core.services.connectivityobserver.ConnectivityObserver
 import com.pena.ismael.socialmediapager.core.services.connectivityobserver.NetworkConnectivityObserver
-import com.pena.ismael.socialmediapager.core.services.downloadmanager.ImageDownloader
 import com.pena.ismael.socialmediapager.core.services.downloadmanager.Downloader
+import com.pena.ismael.socialmediapager.core.services.downloadmanager.ImageDownloader
 import com.pena.ismael.socialmediapager.feature.postpager.repository.local.PostDatabase
 import com.pena.ismael.socialmediapager.feature.postpager.repository.remote.PostApi
 import dagger.Binds
@@ -16,6 +17,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Named
@@ -51,10 +53,13 @@ abstract class PostModule {
         @Provides
         @Singleton
         @Named("post")
-        fun providePostRetrofit(): Retrofit {
+        fun providePostRetrofit(
+            okHttpClient: OkHttpClient
+        ): Retrofit {
             return Retrofit.Builder()
                 .baseUrl(PostApi.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
+                .client(okHttpClient)
                 .build()
         }
 
@@ -64,6 +69,16 @@ abstract class PostModule {
             @Named("post") retrofit: Retrofit
         ): PostApi {
             return retrofit.create(PostApi::class.java)
+        }
+
+        @Provides
+        @Singleton
+        fun providesOkHttpClient(
+            interceptor: LogHttpInterceptor
+        ): OkHttpClient {
+            return OkHttpClient().newBuilder()
+                .addInterceptor(interceptor)
+                .build()
         }
 
         @Provides
@@ -85,3 +100,4 @@ abstract class PostModule {
     }
 
 }
+
